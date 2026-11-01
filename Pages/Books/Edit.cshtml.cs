@@ -17,6 +17,9 @@ public class EditModel : PageModel
 
     [BindProperty]
     public Book Book { get; set; } = default!;
+    [BindProperty]
+    public List<int> SelectedCategoryIds { get; set; } = new();
+    public List<Category> Categories { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(int? id)
     {
@@ -31,8 +34,13 @@ public class EditModel : PageModel
             return NotFound();
         }
         Book = book;
+        SelectedCategoryIds = await _context.BookCategory
+    .Where(bc => bc.BookID == Book.ID)
+    .Select(bc => bc.CategoryID)
+    .ToListAsync();
         ViewData["PublisherID"] = new SelectList(_context.Set<Publisher>(), "ID", "PublisherName");
         ViewData["AuthorID"] = new SelectList(_context.Set<Chiorean_Alexia_Lab2.Models.Authors>(), "ID", "FirstName", Book.AuthorID);
+        Categories = await _context.Category.ToListAsync();
         return Page();
     }
 
@@ -42,10 +50,27 @@ public class EditModel : PageModel
     {
         if (!ModelState.IsValid)
         {
+            Categories = await _context.Category.ToListAsync();
+            ViewData["PublisherID"] = new SelectList(_context.Set<Publisher>(), "ID", "PublisherName");
+            ViewData["AuthorID"] = new SelectList(_context.Set<Chiorean_Alexia_Lab2.Models.Authors>(), "ID", "FirstName", Book.AuthorID);
             return Page();
         }
 
         _context.Attach(Book).State = EntityState.Modified;
+        var existingBookCategories = await _context.BookCategory
+    .Where(bc => bc.BookID == Book.ID)
+    .ToListAsync();
+
+        _context.BookCategory.RemoveRange(existingBookCategories);
+
+        foreach (var categoryId in SelectedCategoryIds)
+        {
+            _context.BookCategory.Add(new BookCategory
+            {
+                BookID = Book.ID,
+                CategoryID = categoryId
+            });
+        }
 
         try
         {

@@ -19,11 +19,16 @@ public class CreateModel : PageModel
     {
         ViewData["PublisherID"] = new SelectList(_context.Set<Publisher>(), "ID", "PublisherName");
         ViewData["AuthorID"] = new SelectList(_context.Set<Chiorean_Alexia_Lab2.Models.Authors>(), "ID", "FirstName");
+        Categories = _context.Category.ToList();
         return Page();
     }
 
     [BindProperty]
     public Book Book { get; set; } = default!;
+    [BindProperty]
+    public List<int> SelectedCategoryIds { get; set; } = new();
+
+    public List<Category> Categories { get; set; } = new();
 
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD.
     public async Task<IActionResult> OnPostAsync()
@@ -32,7 +37,15 @@ public class CreateModel : PageModel
         {
             return Page();
         }
+        Book.BookCategories = new List<BookCategory>();
 
+        foreach (var categoryId in SelectedCategoryIds)
+        {
+            Book.BookCategories.Add(new BookCategory
+            {
+                CategoryID = categoryId
+            });
+        }
         _context.Book.Add(Book);
         await _context.SaveChangesAsync();
 

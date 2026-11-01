@@ -22,7 +22,9 @@ public class IndexModel : PageModel
     {
         var books = _context.Book
      .Include(b => b.Publisher)
-     .Include(b => b.Author);
+     .Include(b => b.Author)
+     .Include(b => b.BookCategories)
+     .ThenInclude(bc => bc.Category);
 
         Book = authorID.HasValue
             ? await books.Where(b => b.AuthorID == authorID).ToListAsync()
