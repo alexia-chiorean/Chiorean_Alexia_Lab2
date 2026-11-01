@@ -10,7 +10,15 @@
 <p>
     <a asp-page="Create">Create New</a>
 </p>
-<form method="get">
+<form asp-page="./Index" method="get">
+    <p>
+        Find by Book Title / Author Name:
+        <input type="text" name="searchString" value="@Model.CurrentFilter" />
+        <input type="submit" value="Search" />
+        |
+        <a asp-page="./Index">Back to full List</a>
+    </p>
+
     <select name="authorID" asp-items="Model.AuthorList">
         <option value="">All Authors</option>
     </select>
@@ -20,10 +28,14 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Book[0].Title)
+                <a asp-page="./Index" asp-route-sortOrder="@Model.TitleSort">
+                    Title
+                </a>
             </th>
             <th>
-                Author
+                <a asp-page="./Index" asp-route-sortOrder="@Model.AuthorSort">
+                    Author
+                </a>
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Book[0].Price)

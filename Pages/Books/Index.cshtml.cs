@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,18 +19,62 @@ public class IndexModel : PageModel
 
     public IList<Book> Book { get; set; } = default!;
     public SelectList? AuthorList { get; set; }
+    public BookData BookD { get; set; } = new();
+    public string TitleSort { get; set; }
+    public string AuthorSort { get; set; }
+    public string CurrentFilter { get; set; }
 
-    public async Task OnGetAsync(int? authorID)
+    public async Task OnGetAsync(int? authorID, string sortOrder, string searchString)
     {
-        var books = _context.Book
-     .Include(b => b.Publisher)
-     .Include(b => b.Author)
-     .Include(b => b.BookCategories)
-     .ThenInclude(bc => bc.Category);
+        TitleSort = String.IsNullOrEmpty(sortOrder) ? "title_desc" : "";
+        AuthorSort = sortOrder == "author" ? "author_desc" : "author";
 
-        Book = authorID.HasValue
-            ? await books.Where(b => b.AuthorID == authorID).ToListAsync()
-            : await books.ToListAsync();
+        CurrentFilter = searchString;
+
+        BookD = new BookData();
+
+        BookD.Books = await _context.Book
+            .Include(b => b.Publisher)
+            .Include(b => b.Author)
+            .Include(b => b.BookCategories)
+                .ThenInclude(bc => bc.Category)
+            .AsNoTracking()
+            .OrderBy(b => b.Title)
+            .ToListAsync();
+
+        if (!String.IsNullOrEmpty(searchString))
+        {
+            BookD.Books = BookD.Books.Where(b =>
+                b.Title.Contains(searchString) ||
+                b.Author.FirstName.Contains(searchString) ||
+                b.Author.LastName.Contains(searchString));
+        }
+
+        if (authorID.HasValue)
+        {
+            BookD.Books = BookD.Books.Where(b => b.AuthorID == authorID.Value);
+        }
+
+        switch (sortOrder)
+        {
+            case "title_desc":
+                BookD.Books = BookD.Books.OrderByDescending(b => b.Title);
+                break;
+
+            case "author":
+                BookD.Books = BookD.Books.OrderBy(b => b.Author == null ? "" : b.Author.FullName);
+                break;
+
+            case "author_desc":
+                BookD.Books = BookD.Books.OrderByDescending(b => b.Author == null ? "" : b.Author.FullName);
+                break;
+
+            default:
+                BookD.Books = BookD.Books.OrderBy(b => b.Title);
+                break;
+        }
+
+        Book = BookD.Books.ToList();
 
         AuthorList = new SelectList(
             _context.Authors,

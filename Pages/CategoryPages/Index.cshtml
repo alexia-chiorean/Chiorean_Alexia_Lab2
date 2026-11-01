@@ -25,9 +25,12 @@
     <tbody>
 @foreach (var item in Model.Category) {
         <tr>
-            <td>
-                @Html.DisplayFor(model => item.CategoryName)
-            </td>
+                <td>
+                    @Html.DisplayFor(model => item.CategoryName)
+                </td>
+                <td>
+                    <a asp-page="./Index" asp-route-id="@item.ID">Select</a>
+                </td>
             <td>
                 @Html.DisplayFor(model => item.BookCategories)
             </td>
@@ -40,3 +43,25 @@
 }
     </tbody>
 </table>
+@if (Model.SelectedCategoryID != null)
+{
+    <h3>Books in selected category</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in Model.Books)
+            {
+                <tr>
+                    <td>@book.Title</td>
+                    <td>@book.Author?.FullName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
