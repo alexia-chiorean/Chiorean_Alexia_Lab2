@@ -1,8 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using Chiorean_Alexia_Lab2.Data;
+using Microsoft.AspNetCore.Identity;
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("Chiorean_Alexia_Lab2Context") ?? throw new InvalidOperationException("Connection string 'Chiorean_Alexia_Lab2Context' not found.");
 
 builder.Services.AddDbContext<Chiorean_Alexia_Lab2Context>(options => options.UseSqlServer(connectionString));
+var identityConnectionString = builder.Configuration.GetConnectionString("LibraryIdentityContext")
+    ?? throw new InvalidOperationException("Connection string 'LibraryIdentityContext' not found.");
+
+builder.Services.AddDbContext<LibraryIdentityContext>(options =>
+    options.UseSqlServer(identityConnectionString));
+
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<LibraryIdentityContext>();
 
 // Add services to the container.
 builder.Services.AddRazorPages();
